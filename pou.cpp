@@ -132,6 +132,7 @@ public:
     friend ostream& operator<<(ostream&, const Food&);
     friend istream& operator>>(istream&, Food&);
 
+    char* getName() const { return name; }
     int getHungerPoints() const { return hungerPoints; }
     float getPleasurePoints() const { return pleasurePoints; }
     double getPrice() const { return price; }
@@ -362,7 +363,6 @@ class Pou {
     }
 
 public:
-
     Pou();
     Pou(char*);
     Pou(const Pou&);
@@ -374,8 +374,24 @@ public:
 
     char* getName() const { return name; }
     double getCoins() const { return coins; }
+    vector<Food>& getFoodItems() { return foodItems; }
+    vector<Accessory>& getAccessoryItems() { return accessoryItems; }
 
-    void addFood(const Food& f) { foodItems.push_back(f); }
+    void addFood(const Food& f) {
+        bool flag = false;
+        for (int i = 0; i < foodItems.size(); i++) {
+            if (strcmp(foodItems[i].getName(), f.getName()) == 0) {
+                foodItems[i].setQuantity(foodItems[i].getQuantity() + 1);
+                flag = true;
+                break;
+            }
+        }
+        if (!flag) {
+            Food newItem = f;
+            newItem.setQuantity(1);
+            foodItems.push_back(newItem);
+        }
+    }
     void addAccessory(const Accessory& a) { accessoryItems.push_back(a); }
 
     void pay(double amount) {
@@ -633,6 +649,8 @@ void printShopMenu(Shop& shop, Pou& pou) {
             const vector <Food>& stock = shop.getFoodStock();
             if (stock.empty()) {
                 cout << "No food stock available!" << endl;
+                back = true;
+                break;
             } else {
                 for (int i = 0; i < stock.size(); i++) cout << i + 1 << ". " << stock[i] << endl;
                 cout << stock.size() + 1 << ". Back" << endl;
@@ -654,6 +672,8 @@ void printShopMenu(Shop& shop, Pou& pou) {
             const vector <Accessory>& stock = shop.getAccessoryStock();
             if (stock.empty()) {
                 cout << "No accessories available!" << endl;
+                back = true;
+                break;
             } else {
                 for (int i = 0; i < stock.size(); i++) cout << i + 1 << ". " << stock[i] << endl;
                 cout << stock.size() + 1 << ". Back" << endl;
@@ -679,6 +699,7 @@ void printShopMenu(Shop& shop, Pou& pou) {
 }
 
 void printMenu(vector<Pou>& pouList, int& currentPou, Shop& shop) {
+    Pou& pou = pouList[currentPou];
     int option;
 
     cout << "================== MENU ==================" << endl;
@@ -693,7 +714,7 @@ void printMenu(vector<Pou>& pouList, int& currentPou, Shop& shop) {
 
     switch (option) {
         case 1: {
-            printInteractMenu(pouList[currentPou]);
+            printInteractMenu(pou);
             break;
         }
         case 2: {
@@ -720,11 +741,19 @@ void printMenu(vector<Pou>& pouList, int& currentPou, Shop& shop) {
             int category;
             cin >> category;
 
-
+            if (category == 1) {
+                for (int i = 0; i < pou.getFoodItems().size(); i++) {
+                    Food& f = pou.getFoodItems()[i];
+                    cout << f.getName() << " x" << f.getQuantity() << endl;
+                }
+            } else {
+                for (int i = 0; i < pou.getAccessoryItems().size(); i++)
+                    cout << pou.getAccessoryItems()[i] << endl;
+            }
             break;
         }
         case 5: {
-            printShopMenu(shop, pouList[currentPou]);
+            printShopMenu(shop, pou);
             break;
         }
         case 6: {
@@ -760,4 +789,4 @@ int main() {
 }
 
 // ADAUGA CLASA MENIU, cu constructor default!
-// next commit message: added status bar, shop buy functionality
+// next commit message: inventory, fixed shopping logic
