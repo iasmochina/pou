@@ -28,6 +28,7 @@ public:
     friend ostream& operator<<(ostream&, const Accessory& obj);
     friend istream& operator>>(istream&, Accessory& obj);
 
+    int getPrice() const { return price; }
 };
 
 int Accessory::noAccessoryItems = 0;
@@ -81,10 +82,10 @@ Accessory::~Accessory() {
 }
 
 ostream& operator<<(ostream& os, const Accessory& obj) {
-    os << "Name: " << obj.name << endl;
-    os << "Color: " << obj.color << endl;
-    os << "Equipped: " << (obj.isEquipped ? "Yes" : "No") << endl;
-    os << "Price: " << obj.price << endl;
+    os << "Name: " << obj.name << " | ";
+    os << "Color: " << obj.color << " | ";
+    os << "Equipped: " << (obj.isEquipped ? "Yes" : "No") << " | ";
+    os << "Price: " << obj.price;
     return os;
 }
 istream& operator>>(istream& is, Accessory& obj) {
@@ -95,7 +96,7 @@ istream& operator>>(istream& is, Accessory& obj) {
     strcpy(obj.name, name);
 
     char color[50];
-    cout << "Color: "; is >> obj.color;
+    cout << "Color: "; is >> color;
     delete[] obj.color;
     obj.color = new char[strlen(color) + 1];
     strcpy(obj.color, color);
@@ -190,11 +191,11 @@ Food::~Food() {
 }
 
 ostream& operator<<(ostream& os, const Food& obj) {
-    os << "Item: " << obj.name << endl;
-    os << " -> Hunger points: " << obj.hungerPoints << endl;
-    os << " -> Pleasure points: " << obj.pleasurePoints << endl;
-    os << " -> Price " << obj.price << endl;
-    os << " -> Is this healthy?" << (obj.isHealthy ? "Yes" : "No") << endl;
+    os << "Item: " << obj.name << " | ";
+    os << "Hunger points: " << obj.hungerPoints << " | ";
+    os << "Pleasure points: " << obj.pleasurePoints << " | ";
+    os << "Price: " << obj.price << " | ";
+    os << "Is this healthy? " << (obj.isHealthy ? "Yes" : "No");
     return os;
 }
 istream& operator>>(istream& is, Food& obj) {
@@ -240,6 +241,12 @@ public:
     friend ostream& operator<<(ostream&, const Shop& obj);
     friend istream& operator>>(istream&, Shop& obj);
 
+    char* getName() { return name; }
+    vector<Food>& getFoodStock() { return foodStock; }
+    vector<Accessory>& getAccessoryStock() { return accessoryStock; }
+
+    Food buyFood(const int id) { return foodStock[id]; }
+    Accessory buyAccessory(const int id) { return accessoryStock[id]; }
 };
 
 Shop::Shop() {
@@ -324,15 +331,21 @@ istream& operator>>(istream& is, Shop& obj) {
 
 //----------------------POU----------------------
 
+void showStatusBar(int const stat) {
+    for (int i = 1; i <= stat/10; i++) cout<< "█";
+    for (int i = 1; i <= 10 - stat/10; i++) cout << "░";
+}
+
+
 class Pou {
 
     static int noPous;
     int id;
     char* name;
-    float hunger;
-    float health;
-    float energy;
-    float happiness;
+    int hunger;
+    int health;
+    int energy;
+    int happiness;
     double coins;
     double experience;
     int level;
@@ -360,12 +373,13 @@ public:
     friend istream& operator>>(istream&, Pou&);
 
     char* getName() const { return name; }
+    double getCoins() const { return coins; }
 
-    bool pay(double amount) {
-        if (coins >= amount) {
-            coins -= amount;
-            return true;
-        } else return false;
+    void addFood(const Food& f) { foodItems.push_back(f); }
+    void addAccessory(const Accessory& a) { accessoryItems.push_back(a); }
+
+    void pay(double amount) {
+        coins -= amount;
     }
 
     void feed() {
@@ -402,15 +416,15 @@ public:
                         cout << "+10 happiness 😁" << endl;
                         cout << "+15 coins 🤑" << endl;
                         cout << "+10 experience 🟢" << endl;
-                        happiness = min(100.0f, happiness+10);
+                        happiness = min(100, happiness+10);
                         coins += 15;
                         experience += 10;
                     } else {
                         cout << "Bummer! The answer was " << number << ". " << name << " is sadder now.."<< endl;
-                        cout << "-10 happiness ☹️";
-                        happiness = max(0.0f, happiness-10);
+                        cout << "-10 happiness ☹️" << endl;
+                        happiness = max(0, happiness-10);
                     }
-                    energy = max(0.0f, energy-10);
+                    energy = max(0, energy-10);
                     checkLevelUp();
                     break;
                 }
@@ -433,15 +447,15 @@ public:
                         cout << "+5 happiness 😁" << endl;
                         cout << "+10 coins 🤑" << endl;
                         cout << "+10 experience 🟢" << endl;
-                        happiness = min(100.0f, happiness+5);
+                        happiness = min(100, happiness+5);
                         coins += 10;
                         experience += 10;
                     } else {
                         cout << "Bummer! The answer was " << res << ". " << name << " is sadder now.."<< endl;
-                        cout << "-10 happiness ☹️";
-                        happiness = max(0.0f, happiness-10);
+                        cout << "-10 happiness ☹️" << endl;
+                        happiness = max(0, happiness-10);
                     }
-                    energy = max(0.0f, energy-10);
+                    energy = max(0, energy-10);
                     checkLevelUp();
                     break;
                 }
@@ -467,15 +481,15 @@ public:
                             cout << "+10 happiness 😁" << endl;
                             cout << "+10 coins 🤑" << endl;
                             cout << "+10 experience 🟢" << endl;
-                            happiness = min(100.0f, happiness+10);
+                            happiness = min(100, happiness+10);
                             coins += 10;
                             experience += 10;
                         } else {
                             cout << "You lost! Womp Womp :(" << endl;
-                            cout << "-10 happiness ☹️";
-                            happiness = max(0.0f, happiness-10);
+                            cout << "-10 happiness ☹️" << endl;
+                            happiness = max(0, happiness-10);
                         }
-                        energy = max(0.0f, energy-10);
+                        energy = max(0, energy-10);
                     }
                     checkLevelUp();
                     break;
@@ -553,7 +567,10 @@ Pou::~Pou() {
 ostream& operator<<(ostream& os, const Pou& obj) {
     os << "=============== CURRENT POU ===============" << endl;
     os << "ID: " << obj.id << " | Name: " << obj.name << " | Coins: " << obj.coins << endl;
-    os << "Energy: " << obj.energy << " | Happiness: " << obj.happiness << " | Hunger: " << obj.hunger << " | Health: " << obj.health << endl;
+    os << "⚡️ Energy: " << obj.energy << "    "; showStatusBar(obj.energy); os << endl;
+    os << "😄 Happiness: " << obj.happiness << " "; showStatusBar(obj.happiness); os << endl;
+    os << "🍗 Hunger: " << obj.hunger << "    "; showStatusBar(obj.hunger); os << endl;
+    os << "❤️ Health: " << obj.health << "    "; showStatusBar(obj.health); os << endl;
     os << "Level: " << obj.level << " | Experience: " << obj.experience << endl;
     return os;
 }
@@ -574,9 +591,7 @@ void printInteractMenu(Pou& pou) {
         << "____________________________________" << endl;
     cout << "1. Feed " << pou.getName() << " 🍕" << endl;
     cout << "2. Play with " << pou.getName() << " 🎮 " << endl;
-    cout << "3. Shop " << " 🛍️ " << endl;
-    cout << "4. Inventory " << " 🎒 " << endl;
-    cout << "5. Go to Menu" << endl;
+    cout << "3. Go to Menu" << endl;
     cin >> option;
     switch (option) {
         case 1:
@@ -584,8 +599,7 @@ void printInteractMenu(Pou& pou) {
         case 2:
             pou.play();
             break;
-        case 5:
-
+        case 3:
             break;
         default:
             cout << "Invalid choice!" << endl;
@@ -598,30 +612,91 @@ int createPou(vector<Pou>& pouList) {
     cin >> name;
 
     pouList.push_back(Pou(name));
-    cout << "Pou " << name << " successfully created!" << endl;
+    cout << "Pou " << name << " successfully created! ✅" << endl;
     cout << endl;
 
     return pouList.size() - 1;
 }
 
-void printMenu(vector<Pou>& pouList, int& currentPou) {
+void printShopMenu(Shop& shop, Pou& pou) {
+    bool back = false;
+    while (!back) {
+        cout << shop.getName() << " 🛒" << endl;
+        cout << "Select a section:" << endl;
+        cout << "1. Food 🍗" << endl;
+        cout << "2. Accessories 🧢" << endl;
+        cout << "3. Exit" << endl;
+
+        int option;
+        cin >> option;
+        if (option == 1) {
+            const vector <Food>& stock = shop.getFoodStock();
+            if (stock.empty()) {
+                cout << "No food stock available!" << endl;
+            } else {
+                for (int i = 0; i < stock.size(); i++) cout << i + 1 << ". " << stock[i] << endl;
+                cout << stock.size() + 1 << ". Back" << endl;
+            }
+            int foodChoice;
+            cout << "Select item to buy: " << endl;
+            cin >> foodChoice;
+            if (foodChoice == stock.size()+1) back = true;
+            else if (foodChoice >= 1 && foodChoice <= stock.size()){
+                Food selected = shop.buyFood(foodChoice-1);
+                if (pou.getCoins() < selected.getPrice()) cout << "You don't have enough money! ❌" << endl;
+                else {
+                    pou.addFood(selected);
+                    pou.pay(selected.getPrice());
+                    cout << "Item successfully bought! 💸" << endl;
+                }
+            } else cout << "Enter a valid number!";
+        } else if (option == 2) {
+            const vector <Accessory>& stock = shop.getAccessoryStock();
+            if (stock.empty()) {
+                cout << "No accessories available!" << endl;
+            } else {
+                for (int i = 0; i < stock.size(); i++) cout << i + 1 << ". " << stock[i] << endl;
+                cout << stock.size() + 1 << ". Back" << endl;
+            }
+            int accessoryChoice;
+            cout << "Select item to buy: " << endl;
+            cin >> accessoryChoice;
+            if (accessoryChoice == stock.size()+1) back = true;
+            else if (accessoryChoice >= 1 && accessoryChoice <= stock.size()){
+                Accessory selected = shop.buyAccessory(accessoryChoice-1);
+                if (pou.getCoins() < selected.getPrice()) cout << "You don't have enough money! ❌" << endl;
+                else {
+                    pou.addAccessory(selected);
+                    pou.pay(selected.getPrice());
+                    cout << "Item successfully bought! 💸" << endl;
+                }
+            } else cout << "Enter a valid number!";
+        }
+        else back = true;
+
+    }
+
+}
+
+void printMenu(vector<Pou>& pouList, int& currentPou, Shop& shop) {
     int option;
 
     cout << "================== MENU ==================" << endl;
-    cout << "1. Interact with " << pouList[currentPou].getName() << endl;
-    cout << "2. Switch Pou" << endl;
-    cout << "3. Create a new Pou" << endl;
-    cout << "4. Inventory" << endl;
-    cout << "5. Shop" << endl;
+    cout << "1. Interact with " << pouList[currentPou].getName() << " 💩" << endl;
+    cout << "2. Switch Pou 🔄" << endl;
+    cout << "3. Create a new Pou 🐣" << endl;
+    cout << "4. Inventory 🎒" << endl;
+    cout << "5. Shop 🛍️" << endl;
     cout << "6. Exit" << endl;
 
     cin >> option;
 
     switch (option) {
-        case 1:
+        case 1: {
             printInteractMenu(pouList[currentPou]);
             break;
-        case 2:
+        }
+        case 2: {
             int selectedPou;
             cout << "Select Pou (1-" << pouList.size() << "): " << endl;
             for (int i = 0; i < pouList.size(); i++) {
@@ -632,20 +707,35 @@ void printMenu(vector<Pou>& pouList, int& currentPou) {
                 currentPou = selectedPou - 1;
             } else cout << "Invalid choice! Sticking to your current Pou." << endl;
             break;
-        case 3:
+        }
+        case 3: {
             currentPou = createPou(pouList);
             break;
-        case 6:
-            cout << "Bye bye!";
+        }
+        case 4: {
+            cout << "Select a category:" << endl;
+            cout << "1. Food" << endl;
+            cout << "2. Accessories" << endl;
+
+            int category;
+            cin >> category;
+
+
+            break;
+        }
+        case 5: {
+            printShopMenu(shop, pouList[currentPou]);
+            break;
+        }
+        case 6: {
+            cout << "Bye bye! 👋";
             exit(0);
+        }
         default:
             cout << "Invalid choice!" << endl;
             break;
     }
 }
-
-
-void printShopMenu(){}
 
 int main() {
     srand(time(0));
@@ -655,18 +745,19 @@ int main() {
 
     cout << "First of all, let's configure your store!" << endl;
     cin >> shop;
-    cout << "Success!" << endl;
+    cout << "Success! ✅" << endl;
 
     while (true) {
         // cout << "=============== POU ===============" << endl;
         if (pouList.empty()) {
-            cout << "Create a Pou!" << endl;
+            cout << "Create a Pou! 💩 " << endl;
             currentPou = createPou(pouList);
         } else {
             cout << pouList[currentPou] << endl;
-            printMenu(pouList, currentPou);
+            printMenu(pouList, currentPou, shop);
         }
     }
 }
 
 // ADAUGA CLASA MENIU, cu constructor default!
+// next commit message: added status bar, shop buy functionality
