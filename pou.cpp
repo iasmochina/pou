@@ -1,9 +1,26 @@
 #include <iostream>
+#include <set>
 #include <string.h>
 #include <vector>
+#define RED "\033[31m"
+#define RESET "\033[0m"
 
 using namespace std;
 
+void proceed() {
+    cout << "Press ENTER to proceed";
+    cin.ignore();
+    cin.get();
+}
+int getSafeIntOption() {
+    int x;
+    while (!(cin >> x)) {
+        cout << RED << "Use only numbers! (0-9)" << RESET << endl << "Your value: ";
+    cin.clear();
+    cin.ignore(1000, '\n');
+    }
+    return x;
+}
 
 class Menu {
     Menu();
@@ -117,7 +134,7 @@ class Food {
     char* name;
     int hungerPoints;
     bool isHealthy;
-    float pleasurePoints;
+    float healthPoints;
     int quantity;
     double price;
 
@@ -131,9 +148,10 @@ public:
     friend ostream& operator<<(ostream&, const Food&);
     friend istream& operator>>(istream&, Food&);
 
+    int getId() const { return id; }
     char* getName() const { return name; }
     int getHungerPoints() const { return hungerPoints; }
-    float getPleasurePoints() const { return pleasurePoints; }
+    float getHealthPoints() const { return healthPoints; }
     double getPrice() const { return price; }
     bool getIsHealthy() const { return isHealthy; }
     int getQuantity() const { return quantity; }
@@ -147,16 +165,16 @@ Food::Food() : id(++noFoodItems) {
     name = strcpy(new char[4], "N/A");
     hungerPoints = 0;
     isHealthy = false;
-    pleasurePoints = 0.0;
+    healthPoints = 0.0;
     quantity =0;
     price = 0.0;
 }
-Food::Food(int id, char* name, int hungerPoints, bool isHealthy, float pleasurePoints, int quantity, double price) : id(++noFoodItems) {
+Food::Food(int id, char* name, int hungerPoints, bool isHealthy, float healthPoints, int quantity, double price) : id(++noFoodItems) {
     this->id = id;
     this->name = strcpy(new char[strlen(name) + 1], name);
     this->hungerPoints = hungerPoints;
     this->isHealthy = isHealthy;
-    this->pleasurePoints = pleasurePoints;
+    this->healthPoints = healthPoints;
     this->quantity = quantity;
     this->price = price;
 }
@@ -165,7 +183,7 @@ Food::Food(const Food &obj) : id(++noFoodItems) {
     this->name = strcpy(new char[strlen(obj.name) + 1], obj.name);
     this->hungerPoints = obj.hungerPoints;
     this->isHealthy = obj.isHealthy;
-    this->pleasurePoints = obj.pleasurePoints;
+    this->healthPoints = obj.healthPoints;
     this->quantity = obj.quantity;
     this->price = obj.price;
 }
@@ -178,7 +196,7 @@ Food& Food::operator=(const Food& obj) {
     this->name = strcpy(new char[strlen(obj.name) + 1], obj.name);
     this->hungerPoints = obj.hungerPoints;
     this->isHealthy = obj.isHealthy;
-    this->pleasurePoints = obj.pleasurePoints;
+    this->healthPoints = obj.healthPoints;
     this->quantity = obj.quantity;
     this->price = obj.price;
     return *this;
@@ -193,9 +211,9 @@ Food::~Food() {
 ostream& operator<<(ostream& os, const Food& obj) {
     os << "Item: " << obj.name << " | ";
     os << "Hunger points: " << obj.hungerPoints << " | ";
-    os << "Pleasure points: " << obj.pleasurePoints << " | ";
+    os << "Health points: " << obj.healthPoints << " | ";
     os << "Price: " << obj.price << " | ";
-    os << "Is this healthy? " << (obj.isHealthy ? "Yes" : "No");
+    os << "Is this healthy? " << (obj.isHealthy ? "Yes" : "No") << endl;
     return os;
 }
 istream& operator>>(istream& is, Food& obj) {
@@ -208,13 +226,33 @@ istream& operator>>(istream& is, Food& obj) {
     strcpy(obj.name, itemName);
 
     cout << "Enter hunger points: ";
-    is >> obj.hungerPoints;
-    cout << "Enter pleasure points: ";
-    is >> obj.pleasurePoints;
+    while (!(is >> obj.hungerPoints)) {
+        cout << RED << "Use only numbers! (0-9)" << RESET << endl << "Your value: ";
+        cin.clear();
+        cin.ignore(1000, '\n');
+    }
+
+    cout << "Enter health points: ";
+    while (!(is >> obj.healthPoints)) {
+        cout << RED << "Use only numbers! (0-9)" << RESET << endl << "Your value: ";
+        cin.clear();
+        cin.ignore(1000, '\n');
+    }
+
     cout << "Is this healthy? (0-No/1-Yes): ";
-    is >> obj.isHealthy;
+    while (!(is >> obj.isHealthy)) {
+        cout << RED << "Use only 0(False) or 1(True)! " << RESET << endl << "Your value: ";
+        cin.clear();
+        cin.ignore(1000, '\n');
+    }
+
     cout << "Enter price: ";
-    is >> obj.price;
+    while (!(is >> obj.price)) {
+        cout << RED << "Use only numbers! (0-9)" << RESET << endl << "Your value: ";
+        cin.clear();
+        cin.ignore(1000, '\n');
+    }
+
     cout << "==========================================" << endl;
     cout << obj.name << " successfully added!" << endl;
     cout << "==========================================" << endl;
@@ -316,14 +354,16 @@ istream& operator>>(istream& is, Shop& obj) {
 
     int nrfood, nracc;
 
-    cout << "How many food items do you want to add?:"; is >> nrfood;
+    cout << "How many food items do you want to add?:";
+    nrfood = getSafeIntOption();
     for (int i = 0; i < nrfood; i++) {
         Food f;
         is >> f;
         obj.foodStock.push_back(f);
     }
 
-    cout << "How many accessory items do you want to add?:"; is >> nracc;
+    cout << "How many accessory items do you want to add?:";
+    nracc = getSafeIntOption();
     for (int i = 0; i < nracc; i++) {
         Accessory a;
         is >> a;
@@ -379,6 +419,8 @@ public:
     vector<Food>& getFoodItems() { return foodItems; }
     vector<Accessory>& getAccessoryItems() { return accessoryItems; }
 
+    void setEnergy(int value) { energy = value ; }
+
     void addFood(const Food& f)  {
         bool flag = false;
         for (int i = 0; i < foodItems.size(); i++) {
@@ -414,7 +456,9 @@ public:
             happiness = max(0, happiness-10);
         }
         energy = max(0, energy-10);
+        hunger = max(0, hunger-10);
         checkLevelUp();
+        proceed();
     }
     void solveEq() {
         int op1 = rand() % 20 + 1, op2 = rand() % 20 + 1, symb = rand() % 3 + 1, res, guess;
@@ -444,7 +488,9 @@ public:
             happiness = max(0, happiness-10);
         }
         energy = max(0, energy-10);
+        hunger = max(0, hunger-10);
         checkLevelUp();
+        proceed();
     }
     void rps() {
         const char* moves[] = {"", "Rock 🪨", "Paper 📄", "Scissors ✂️"};
@@ -455,37 +501,73 @@ public:
         cout << "3. Scissors ✂️" << endl;
 
         cin >> userMove;
-
         if (userMove < 1 || userMove > 3) {
             cout << "Invalid move!" << endl;
-        } else {
-            cout << "You chose: " << moves[userMove]  << endl;
-            cout << name << " chose: " << moves[pouMove] << endl;
-
-            if (userMove == pouMove) cout << "It's a draw." << endl;
-            else if ((userMove == 1 && pouMove == 3) || (userMove == 2 && pouMove == 1) || (userMove == 3 && pouMove == 2)) {
-                cout << "You won! 🏆";
-                cout << "+10 happiness 😁" << endl;
-                cout << "+10 coins 🤑" << endl;
-                cout << "+10 experience 🟢" << endl;
-                happiness = min(100, happiness+10);
-                coins += 10;
-                experience += 10;
-            } else {
-                cout << "You lost! Womp Womp :(" << endl;
-                cout << "-10 happiness ☹️" << endl;
-                happiness = max(0, happiness-10);
-            }
-            energy = max(0, energy-10);
+            proceed();
+            return;
         }
+        cout << "You chose: " << moves[userMove]  << endl;
+        cout << name << " chose: " << moves[pouMove] << endl;
+
+        if (userMove == pouMove) cout << "It's a draw." << endl;
+        else if ((userMove == 1 && pouMove == 3) || (userMove == 2 && pouMove == 1) || (userMove == 3 && pouMove == 2)) {
+            cout << "You won! 🏆";
+            cout << "+10 happiness 😁" << endl;
+            cout << "+10 coins 🤑" << endl;
+            cout << "+10 experience 🟢" << endl;
+            happiness = min(100, happiness+10);
+            coins += 10;
+            experience += 10;
+        } else {
+            cout << "You lost! Womp Womp :(" << endl;
+            cout << "-10 happiness ☹️" << endl;
+            happiness = max(0, happiness-10);
+        }
+        energy = max(0, energy-10);
+        hunger = max(0, hunger-10);
+        checkLevelUp();
+        proceed();
     }
 
     void pay(double amount) {
         coins -= amount;
     }
 
-    void feed() {
+    void sleep(Pou& pou) {
+        if (pou.energy >= 70) {
+            cout << pou.name << " is not tired. Try again later." << endl;
+            proceed();
+            return;
+        }
+        cout << pou.name << " got some sleep and now is feeling energetic 🔋" << endl;
+        setEnergy(100);
+        proceed();
+    }
 
+    void feed(Food& foodItem, Pou& pou) {
+        pou.hunger += foodItem.getHungerPoints();
+        if (foodItem.getIsHealthy()) pou.health += foodItem.getHealthPoints();
+
+    }
+
+    void feedMenu(Pou& pou) {
+        if (foodItems.empty()) {
+            cout << "No food available!" << endl;
+            proceed();
+            return;
+        }
+        cout << "============== FRIDGE 🥤 ==============" << endl;
+        for (int i = 0; i < foodItems.size(); i++) {
+            Food& f = pou.getFoodItems()[i];
+            cout << f << " | Quantity: x" << f.getQuantity() << endl;
+        }
+        cout << foodItems.size() + 1 << ". Back" << endl;
+
+        int option;
+        cout << "Choose what you want to feed " << pou.name << "(1-" << foodItems.size() << ") " << endl;
+        option = getSafeIntOption();
+        if (option == foodItems.size() + 1) return;
+        feed(foodItems[option], pou);
     }
 
     void play() {
@@ -497,7 +579,8 @@ public:
             if (energy <= 0) {
                 cout << "⚠️ " << name << " is too tired to play. Feed him something and come back!" << endl;
                 back = true;
-                continue;
+                proceed();
+                return;
             }
 
             cout << "Choose a game: " << endl;
@@ -506,7 +589,7 @@ public:
             cout << "3. Rock, paper, scissors" << endl;
             cout << "4. Exit" << endl;
 
-            cin >> option;
+            option = getSafeIntOption();
 
             switch (option) {
                 case 1: {
@@ -622,15 +705,20 @@ void printInteractMenu(Pou& pou) {
         << "____________________________________" << endl;
     cout << "1. Feed " << pou.getName() << " 🍕" << endl;
     cout << "2. Play with " << pou.getName() << " 🎮 " << endl;
-    cout << "3. Go to Menu" << endl;
-    cin >> option;
+    cout << "3. Put " << pou.getName() << " to sleep 😴" << endl;
+    cout << "4. Go to Menu" << endl;
+    option = getSafeIntOption();
     switch (option) {
         case 1:
+            pou.feedMenu(pou);
             break;
         case 2:
             pou.play();
             break;
         case 3:
+            pou.sleep(pou);
+            break;
+        case 4:
             break;
         default:
             cout << "Invalid choice!" << endl;
@@ -659,51 +747,59 @@ void printShopMenu(Shop& shop, Pou& pou) {
         cout << "3. Exit" << endl;
 
         int option;
-        cin >> option;
+        option = getSafeIntOption();
         if (option == 1) {
             const vector <Food>& stock = shop.getFoodStock();
             if (stock.empty()) {
                 cout << "No food stock available!" << endl;
-                back = true;
+                proceed();
                 break;
-            } else {
-                for (int i = 0; i < stock.size(); i++) cout << i + 1 << ". " << stock[i] << endl;
-                cout << stock.size() + 1 << ". Back" << endl;
             }
+            for (int i = 0; i < stock.size(); i++) cout << i + 1 << ". " << stock[i];
+            cout << stock.size() + 1 << ". Back" << endl;
+
             int foodChoice;
-            cout << "Select item to buy: " << endl;
+            cout << "Make your selection: " << endl;
             cin >> foodChoice;
             if (foodChoice == stock.size()+1) back = true;
             else if (foodChoice >= 1 && foodChoice <= stock.size()){
                 Food selected = shop.buyFood(foodChoice-1);
-                if (pou.getCoins() < selected.getPrice()) cout << "You don't have enough money! ❌" << endl;
-                else {
-                    pou.addFood(selected);
-                    pou.pay(selected.getPrice());
-                    cout << "Item successfully bought! 💸" << endl;
+                if (pou.getCoins() < selected.getPrice()) {
+                    cout << "You don't have enough money! ❌" << endl;
+                    proceed();
+                    return;
                 }
+                pou.addFood(selected);
+                pou.pay(selected.getPrice());
+                cout << "Item successfully bought! 💸" << endl;
+                proceed();
+                return;
             } else cout << "Enter a valid number!";
         } else if (option == 2) {
             const vector <Accessory>& stock = shop.getAccessoryStock();
             if (stock.empty()) {
                 cout << "No accessories available!" << endl;
-                back = true;
+                proceed();
                 break;
-            } else {
-                for (int i = 0; i < stock.size(); i++) cout << i + 1 << ". " << stock[i] << endl;
-                cout << stock.size() + 1 << ". Back" << endl;
             }
+            for (int i = 0; i < stock.size(); i++) cout << i + 1 << ". " << stock[i] << endl;
+            cout << stock.size() + 1 << ". Back" << endl;
+
             int accessoryChoice;
             cout << "Select item to buy: " << endl;
             cin >> accessoryChoice;
             if (accessoryChoice == stock.size()+1) back = true;
             else if (accessoryChoice >= 1 && accessoryChoice <= stock.size()){
                 Accessory selected = shop.buyAccessory(accessoryChoice-1);
-                if (pou.getCoins() < selected.getPrice()) cout << "You don't have enough money! ❌" << endl;
+                if (pou.getCoins() < selected.getPrice()) {
+                    cout << "You don't have enough money! ❌" << endl;
+                    proceed();
+                }
                 else {
                     pou.addAccessory(selected);
                     pou.pay(selected.getPrice());
                     cout << "Item successfully bought! 💸" << endl;
+                    proceed();
                 }
             } else cout << "Enter a valid number!";
         }
@@ -725,7 +821,7 @@ void printMenu(vector<Pou>& pouList, int& currentPou, Shop& shop) {
     cout << "5. Shop 🛍️" << endl;
     cout << "6. Exit" << endl;
 
-    cin >> option;
+    option = getSafeIntOption();
 
     switch (option) {
         case 1: {
@@ -757,11 +853,22 @@ void printMenu(vector<Pou>& pouList, int& currentPou, Shop& shop) {
             cin >> category;
 
             if (category == 1) {
+                if (pou.getFoodItems().empty()) {
+                    cout << "You don't own any food!" << endl;
+                    proceed();
+                    break;
+                }
                 for (int i = 0; i < pou.getFoodItems().size(); i++) {
                     Food& f = pou.getFoodItems()[i];
-                    cout << f.getName() << " x" << f.getQuantity() << endl;
+                    cout << f.getId() << ". " << f.getName() << " | Quantity: x" << f.getQuantity() << endl;
+                    proceed();
                 }
             } else {
+                if (pou.getAccessoryItems().empty()) {
+                    cout << "You don't own any accessories!" << endl;
+                    proceed();
+                    break;
+                }
                 for (int i = 0; i < pou.getAccessoryItems().size(); i++)
                     cout << pou.getAccessoryItems()[i] << endl;
             }
@@ -803,9 +910,11 @@ int main() {
 }
 
 // ADAUGA CLASA MENIU, cu constructor default!
-// next commit message: inventory, fixed shopping logic, modified play function organisation
+// next commit message: prevent menu from showing too quick, empty inventory fix, swapped pleasurePoints with healthPoints, fixed option data type bug
 // fix bugs cand dau o data invalida la tastatura peste tot (is it healthy etc)
 // sa pot sa adaug eu iteme noi in shop eventual
 // energie vs hunger
 // integreaza sleep
 // add static int la tot kms
+// modifica inventarul ala sa arate mai de doamne ajuta
+//
