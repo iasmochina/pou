@@ -1,8 +1,7 @@
 #include <iostream>
 #include <string.h>
 #include <vector>
-#include <cstdlib>
-#include <ctime>
+
 using namespace std;
 
 
@@ -226,6 +225,8 @@ istream& operator>>(istream& is, Food& obj) {
 //---------------------- SHOP ----------------------
 
 class Shop {
+    static int noShops;
+    int id;
     char* name;
     vector<Food> foodStock;
     vector<Accessory> accessoryStock;
@@ -234,7 +235,7 @@ class Shop {
 
 public:
     Shop();
-    Shop(char*, vector<Food> Food, vector<Accessory> Accessory, int, int);
+    Shop(char*, vector<Food> foodStock, vector<Accessory> accessoryStock, int, int);
     Shop(const Shop& obj);
     Shop& operator=(const Shop& obj);
     ~Shop();
@@ -246,16 +247,18 @@ public:
     vector<Food>& getFoodStock() { return foodStock; }
     vector<Accessory>& getAccessoryStock() { return accessoryStock; }
 
-    Food buyFood(const int id) { return foodStock[id]; }
-    Accessory buyAccessory(const int id) { return accessoryStock[id]; }
+    Food buyFood(const int nr) { return foodStock[nr]; }
+    Accessory buyAccessory(const int nr) { return accessoryStock[nr]; }
 };
 
-Shop::Shop() {
+int Shop::noShops = 0;
+
+Shop::Shop() : id(++noShops) {
     name = strcpy(new char[4], "N/A");
     totalFoodItems = 0;
     totalAccessoryItems = 0;
 }
-Shop::Shop(char* name, vector<Food> foodStock, vector<Accessory> accessoryStock, int totalFoodItems, int totalAccessoryItems) {
+Shop::Shop(char* name, vector<Food> foodStock, vector<Accessory> accessoryStock, int totalFoodItems, int totalAccessoryItems) : id(++noShops)  {
     this->name = new char[strlen(name) + 1];
     strcpy(this->name, name);
     this->foodStock = foodStock;
@@ -263,7 +266,7 @@ Shop::Shop(char* name, vector<Food> foodStock, vector<Accessory> accessoryStock,
     this->totalFoodItems = totalFoodItems;
     this->totalAccessoryItems = totalAccessoryItems;
 }
-Shop::Shop(const Shop& obj) {
+Shop::Shop(const Shop& obj) : id(++noShops)  {
     this->name = new char[strlen(obj.name) + 1];
     strcpy(this->name, obj.name);
     this->foodStock = obj.foodStock;
@@ -337,7 +340,6 @@ void showStatusBar(int const stat) {
     for (int i = 1; i <= 10 - stat/10; i++) cout << "░";
 }
 
-
 class Pou {
 
     static int noPous;
@@ -377,7 +379,7 @@ public:
     vector<Food>& getFoodItems() { return foodItems; }
     vector<Accessory>& getAccessoryItems() { return accessoryItems; }
 
-    void addFood(const Food& f) {
+    void addFood(const Food& f)  {
         bool flag = false;
         for (int i = 0; i < foodItems.size(); i++) {
             if (strcmp(foodItems[i].getName(), f.getName()) == 0) {
@@ -393,6 +395,90 @@ public:
         }
     }
     void addAccessory(const Accessory& a) { accessoryItems.push_back(a); }
+
+    void guessNum() {
+        int guess, number = rand() % 10 + 1;
+        cout << "Guess a number between 1 and 10: " << endl;
+        cin >> guess;
+        if (guess == number) {
+            cout << "You guessed it!" << endl;
+            cout << "+10 happiness 😁" << endl;
+            cout << "+15 coins 🤑" << endl;
+            cout << "+10 experience 🟢" << endl;
+            happiness = min(100, happiness+10);
+            coins += 15;
+            experience += 10;
+        } else {
+            cout << "Bummer! The answer was " << number << ". " << name << " is sadder now.."<< endl;
+            cout << "-10 happiness ☹️" << endl;
+            happiness = max(0, happiness-10);
+        }
+        energy = max(0, energy-10);
+        checkLevelUp();
+    }
+    void solveEq() {
+        int op1 = rand() % 20 + 1, op2 = rand() % 20 + 1, symb = rand() % 3 + 1, res, guess;
+        cout << "Solve the equation!:" << endl;
+        if (symb == 1) { //plus
+            cout << op1 << "+" << op2 << "=";
+            res = op1 + op2;
+        } else if (symb == 2) { //minus
+            cout << op1 << "-" << op2 << "=";
+            res = op1 - op2;
+        } else { //multiply
+            cout << op1 << "*" << op2 << "=";
+            res = op1 * op2;
+        }
+        cin >> guess;
+        if (guess == res) {
+            cout << endl << "Correct!" << endl;
+            cout << "+5 happiness 😁" << endl;
+            cout << "+10 coins 🤑" << endl;
+            cout << "+10 experience 🟢" << endl;
+            happiness = min(100, happiness+5);
+            coins += 10;
+            experience += 10;
+        } else {
+            cout << "Bummer! The answer was " << res << ". " << name << " is sadder now.."<< endl;
+            cout << "-10 happiness ☹️" << endl;
+            happiness = max(0, happiness-10);
+        }
+        energy = max(0, energy-10);
+        checkLevelUp();
+    }
+    void rps() {
+        const char* moves[] = {"", "Rock 🪨", "Paper 📄", "Scissors ✂️"};
+        int userMove, pouMove = rand() % 3 + 1;
+        cout << "Play against " << name << ". Choose your move:" << endl;
+        cout << "1. Rock 🪨" << endl;
+        cout << "2. Paper 📄" << endl;
+        cout << "3. Scissors ✂️" << endl;
+
+        cin >> userMove;
+
+        if (userMove < 1 || userMove > 3) {
+            cout << "Invalid move!" << endl;
+        } else {
+            cout << "You chose: " << moves[userMove]  << endl;
+            cout << name << " chose: " << moves[pouMove] << endl;
+
+            if (userMove == pouMove) cout << "It's a draw." << endl;
+            else if ((userMove == 1 && pouMove == 3) || (userMove == 2 && pouMove == 1) || (userMove == 3 && pouMove == 2)) {
+                cout << "You won! 🏆";
+                cout << "+10 happiness 😁" << endl;
+                cout << "+10 coins 🤑" << endl;
+                cout << "+10 experience 🟢" << endl;
+                happiness = min(100, happiness+10);
+                coins += 10;
+                experience += 10;
+            } else {
+                cout << "You lost! Womp Womp :(" << endl;
+                cout << "-10 happiness ☹️" << endl;
+                happiness = max(0, happiness-10);
+            }
+            energy = max(0, energy-10);
+        }
+    }
 
     void pay(double amount) {
         coins -= amount;
@@ -424,89 +510,17 @@ public:
 
             switch (option) {
                 case 1: {
-                    int guess, number = rand() % 10 + 1;
-                    cout << "Guess a number between 1 and 10: " << endl;
-                    cin >> guess;
-                    if (guess == number) {
-                        cout << "You guessed it!" << endl;
-                        cout << "+10 happiness 😁" << endl;
-                        cout << "+15 coins 🤑" << endl;
-                        cout << "+10 experience 🟢" << endl;
-                        happiness = min(100, happiness+10);
-                        coins += 15;
-                        experience += 10;
-                    } else {
-                        cout << "Bummer! The answer was " << number << ". " << name << " is sadder now.."<< endl;
-                        cout << "-10 happiness ☹️" << endl;
-                        happiness = max(0, happiness-10);
-                    }
-                    energy = max(0, energy-10);
+                    guessNum();
                     checkLevelUp();
                     break;
                 }
                 case 2: {
-                    int op1 = rand() % 20 + 1, op2 = rand() % 20 + 1, symb = rand() % 3 + 1, res, guess;
-                    cout << "Solve the equation!:" << endl;
-                    if (symb == 1) { //plus
-                        cout << op1 << "+" << op2 << "=";
-                        res = op1 + op2;
-                    } else if (symb == 2) { //minus
-                        cout << op1 << "-" << op2 << "=";
-                        res = op1 - op2;
-                    } else { //multiply
-                        cout << op1 << "*" << op2 << "=";
-                        res = op1 * op2;
-                    }
-                    cin >> guess;
-                    if (guess == res) {
-                        cout << endl << "Correct!" << endl;
-                        cout << "+5 happiness 😁" << endl;
-                        cout << "+10 coins 🤑" << endl;
-                        cout << "+10 experience 🟢" << endl;
-                        happiness = min(100, happiness+5);
-                        coins += 10;
-                        experience += 10;
-                    } else {
-                        cout << "Bummer! The answer was " << res << ". " << name << " is sadder now.."<< endl;
-                        cout << "-10 happiness ☹️" << endl;
-                        happiness = max(0, happiness-10);
-                    }
-                    energy = max(0, energy-10);
+                    solveEq();
                     checkLevelUp();
                     break;
                 }
                 case 3: {
-                    const char* moves[] = {"", "Rock 🪨", "Paper 📄", "Scissors ✂️"};
-                    int userMove, pouMove = rand() % 3 + 1;
-                    cout << "Play against " << name << ". Choose your move:" << endl;
-                    cout << "1. Rock 🪨" << endl;
-                    cout << "2. Paper 📄" << endl;
-                    cout << "3. Scissors ✂️" << endl;
-
-                    cin >> userMove;
-
-                    if (userMove < 1 || userMove > 3) {
-                        cout << "Invalid move!" << endl;
-                    } else {
-                        cout << "You chose: " << moves[userMove]  << endl;
-                        cout << name << " chose: " << moves[pouMove] << endl;
-
-                        if (userMove == pouMove) cout << "It's a draw." << endl;
-                        else if ((userMove == 1 && pouMove == 3) || (userMove == 2 && pouMove == 1) || (userMove == 3 && pouMove == 2)) {
-                            cout << "You won! 🏆";
-                            cout << "+10 happiness 😁" << endl;
-                            cout << "+10 coins 🤑" << endl;
-                            cout << "+10 experience 🟢" << endl;
-                            happiness = min(100, happiness+10);
-                            coins += 10;
-                            experience += 10;
-                        } else {
-                            cout << "You lost! Womp Womp :(" << endl;
-                            cout << "-10 happiness ☹️" << endl;
-                            happiness = max(0, happiness-10);
-                        }
-                        energy = max(0, energy-10);
-                    }
+                    rps();
                     checkLevelUp();
                     break;
                 }
@@ -525,6 +539,7 @@ public:
 };
 
 int Pou::noPous = 0;
+
 Pou::Pou() : id(++noPous) {
     name = strcpy(new char[4], "N/A");
     hunger = 100;
@@ -777,7 +792,6 @@ int main() {
     cout << "Success! ✅" << endl;
 
     while (true) {
-        // cout << "=============== POU ===============" << endl;
         if (pouList.empty()) {
             cout << "Create a Pou! 💩 " << endl;
             currentPou = createPou(pouList);
@@ -789,4 +803,9 @@ int main() {
 }
 
 // ADAUGA CLASA MENIU, cu constructor default!
-// next commit message: inventory, fixed shopping logic
+// next commit message: inventory, fixed shopping logic, modified play function organisation
+// fix bugs cand dau o data invalida la tastatura peste tot (is it healthy etc)
+// sa pot sa adaug eu iteme noi in shop eventual
+// energie vs hunger
+// integreaza sleep
+// add static int la tot kms
