@@ -22,9 +22,6 @@ int getSafeIntOption() {
     return x;
 }
 
-class Menu {
-    Menu();
-};
 // ----------------------ACCESSORY----------------------
 class Accessory {
     static int noAccessoryItems;
@@ -213,7 +210,7 @@ ostream& operator<<(ostream& os, const Food& obj) {
     os << "Hunger points: " << obj.hungerPoints << " | ";
     os << "Health points: " << obj.healthPoints << " | ";
     os << "Price: " << obj.price << " | ";
-    os << "Is this healthy? " << (obj.isHealthy ? "Yes" : "No") << endl;
+    os << "Is this healthy? " << (obj.isHealthy ? "Yes" : "No") ;
     return os;
 }
 istream& operator>>(istream& is, Food& obj) {
@@ -386,7 +383,7 @@ class Pou {
     int id;
     char* name;
     int hunger;
-    int health;
+    float health;
     int energy;
     int happiness;
     double coins;
@@ -546,8 +543,15 @@ public:
 
     void feed(Food& foodItem, Pou& pou) {
         pou.hunger += foodItem.getHungerPoints();
-        if (foodItem.getIsHealthy()) pou.health += foodItem.getHealthPoints();
-
+        pou.hunger = min(100, pou.hunger);
+        if (foodItem.getIsHealthy()) {
+            pou.health += foodItem.getHealthPoints();
+            pou.health = min(100.0f, pou.health);
+        } else {
+            pou.health -= foodItem.getHealthPoints();
+            pou.health = max(0.0f, pou.health);
+        }
+        foodItem.setQuantity(foodItem.getQuantity() - 1);
     }
 
     void feedMenu(Pou& pou) {
@@ -566,8 +570,16 @@ public:
         int option;
         cout << "Choose what you want to feed " << pou.name << "(1-" << foodItems.size() << ") " << endl;
         option = getSafeIntOption();
-        if (option == foodItems.size() + 1) return;
-        feed(foodItems[option], pou);
+
+        if (option < 1 || option > foodItems.size()) {
+            cout << "Invalid option!" << endl;
+            proceed();
+            return;
+        }
+        feed(foodItems[option-1], pou);
+        cout << pou.name << " ate " << foodItems[option-1].getName() << " 😋" << endl;
+        if (foodItems[option-1].getQuantity() == 0) foodItems.erase(foodItems.begin()+option-1);
+        proceed();
     }
 
     void play() {
@@ -578,7 +590,6 @@ public:
 
             if (energy <= 0) {
                 cout << "⚠️ " << name << " is too tired to play. Feed him something and come back!" << endl;
-                back = true;
                 proceed();
                 return;
             }
@@ -755,7 +766,7 @@ void printShopMenu(Shop& shop, Pou& pou) {
                 proceed();
                 break;
             }
-            for (int i = 0; i < stock.size(); i++) cout << i + 1 << ". " << stock[i];
+            for (int i = 0; i < stock.size(); i++) cout << i + 1 << ". " << stock[i] << endl;
             cout << stock.size() + 1 << ". Back" << endl;
 
             int foodChoice;
@@ -804,7 +815,6 @@ void printShopMenu(Shop& shop, Pou& pou) {
             } else cout << "Enter a valid number!";
         }
         else back = true;
-
     }
 
 }
@@ -861,8 +871,8 @@ void printMenu(vector<Pou>& pouList, int& currentPou, Shop& shop) {
                 for (int i = 0; i < pou.getFoodItems().size(); i++) {
                     Food& f = pou.getFoodItems()[i];
                     cout << f.getId() << ". " << f.getName() << " | Quantity: x" << f.getQuantity() << endl;
-                    proceed();
                 }
+                proceed();
             } else {
                 if (pou.getAccessoryItems().empty()) {
                     cout << "You don't own any accessories!" << endl;
@@ -910,11 +920,11 @@ int main() {
 }
 
 // ADAUGA CLASA MENIU, cu constructor default!
-// next commit message: prevent menu from showing too quick, empty inventory fix, swapped pleasurePoints with healthPoints, fixed option data type bug
-// fix bugs cand dau o data invalida la tastatura peste tot (is it healthy etc)
-// sa pot sa adaug eu iteme noi in shop eventual
-// energie vs hunger
-// integreaza sleep
-// add static int la tot kms
-// modifica inventarul ala sa arate mai de doamne ajuta
-//
+// next commit message: finished pou interaction menu,
+
+// ----------------------MENU----------------------
+
+class Menu {
+    vector<Pou*> PouList;
+    Menu();
+};
