@@ -224,14 +224,14 @@ istream& operator>>(istream& is, Food& obj) {
 
     cout << "Enter hunger points: ";
     while (!(is >> obj.hungerPoints)) {
-        cout << RED << "Use only numbers! (0-9)" << RESET << endl << "Your value: ";
+        cout << RED << "Use only numbers! (0-100)" << RESET << endl << "Your value: ";
         cin.clear();
         cin.ignore(1000, '\n');
     }
 
     cout << "Enter health points: ";
     while (!(is >> obj.healthPoints)) {
-        cout << RED << "Use only numbers! (0-9)" << RESET << endl << "Your value: ";
+        cout << RED << "Use only numbers! (0-100)" << RESET << endl << "Your value: ";
         cin.clear();
         cin.ignore(1000, '\n');
     }
@@ -245,7 +245,7 @@ istream& operator>>(istream& is, Food& obj) {
 
     cout << "Enter price: ";
     while (!(is >> obj.price)) {
-        cout << RED << "Use only numbers! (0-9)" << RESET << endl << "Your value: ";
+        cout << RED << "Use only numbers! (1-100)" << RESET << endl << "Your value: ";
         cin.clear();
         cin.ignore(1000, '\n');
     }
@@ -265,12 +265,10 @@ class Shop {
     char* name;
     vector<Food> foodStock;
     vector<Accessory> accessoryStock;
-    int totalFoodItems;
-    int totalAccessoryItems;
 
 public:
     Shop();
-    Shop(char*, vector<Food> foodStock, vector<Accessory> accessoryStock, int, int);
+    Shop(char*, vector<Food> foodStock, vector<Accessory> accessoryStock);
     Shop(const Shop& obj);
     Shop& operator=(const Shop& obj);
     ~Shop();
@@ -290,24 +288,18 @@ int Shop::noShops = 0;
 
 Shop::Shop() : id(++noShops) {
     name = strcpy(new char[4], "N/A");
-    totalFoodItems = 0;
-    totalAccessoryItems = 0;
 }
-Shop::Shop(char* name, vector<Food> foodStock, vector<Accessory> accessoryStock, int totalFoodItems, int totalAccessoryItems) : id(++noShops)  {
+Shop::Shop(char* name, vector<Food> foodStock, vector<Accessory> accessoryStock) : id(++noShops)  {
     this->name = new char[strlen(name) + 1];
     strcpy(this->name, name);
     this->foodStock = foodStock;
     this->accessoryStock = accessoryStock;
-    this->totalFoodItems = totalFoodItems;
-    this->totalAccessoryItems = totalAccessoryItems;
 }
 Shop::Shop(const Shop& obj) : id(++noShops)  {
     this->name = new char[strlen(obj.name) + 1];
     strcpy(this->name, obj.name);
     this->foodStock = obj.foodStock;
     this->accessoryStock = obj.accessoryStock;
-    this->totalFoodItems = obj.totalFoodItems;
-    this->totalAccessoryItems = obj.totalAccessoryItems;
 }
 Shop& Shop::operator=(const Shop& obj) {
     if (this == &obj) {
@@ -317,8 +309,6 @@ Shop& Shop::operator=(const Shop& obj) {
     this->name = new char[strlen(obj.name) + 1];
     strcpy(this->name, obj.name);
     this->foodStock = obj.foodStock;
-    this->totalFoodItems = obj.totalFoodItems;
-    this->totalAccessoryItems = obj.totalAccessoryItems;
     return* this;
 }
 Shop::~Shop() {
@@ -417,6 +407,10 @@ public:
     vector<Accessory>& getAccessoryItems() { return accessoryItems; }
 
     void setEnergy(int value) { energy = value ; }
+
+    bool statIsZero() const {
+        return hunger <= 0 || health <= 0;
+    }
 
     void addFood(const Food& f)  {
         bool flag = false;
@@ -530,31 +524,32 @@ public:
         coins -= amount;
     }
 
-    void sleep(Pou& pou) {
-        if (pou.energy >= 70) {
-            cout << pou.name << " is not tired. Try again later." << endl;
+    void sleep() {
+        if (energy >= 70) {
+            cout << name << " is not tired. Try again later." << endl;
             proceed();
             return;
         }
-        cout << pou.name << " got some sleep and now is feeling energetic 🔋" << endl;
+        cout << name << " got some sleep and now is feeling energetic 🔋" << endl;
         setEnergy(100);
         proceed();
     }
 
-    void feed(Food& foodItem, Pou& pou) {
-        pou.hunger += foodItem.getHungerPoints();
-        pou.hunger = min(100, pou.hunger);
+    void feed(Food& foodItem) {
+        hunger += foodItem.getHungerPoints();
+        hunger = min(100, hunger);
         if (foodItem.getIsHealthy()) {
-            pou.health += foodItem.getHealthPoints();
-            pou.health = min(100.0f, pou.health);
+            health += foodItem.getHealthPoints();
+            health = min(100.0f, health);
         } else {
-            pou.health -= foodItem.getHealthPoints();
-            pou.health = max(0.0f, pou.health);
+            health -= foodItem.getHealthPoints();
+            health = max(0.0f, health);
         }
         foodItem.setQuantity(foodItem.getQuantity() - 1);
     }
 
-    void feedMenu(Pou& pou) {
+    void feedMenu() {
+        if (statIsZero()) return;
         if (foodItems.empty()) {
             cout << "No food available!" << endl;
             proceed();
@@ -562,13 +557,13 @@ public:
         }
         cout << "============== FRIDGE 🥤 ==============" << endl;
         for (int i = 0; i < foodItems.size(); i++) {
-            Food& f = pou.getFoodItems()[i];
-            cout << f << " | Quantity: x" << f.getQuantity() << endl;
+            Food& f = getFoodItems()[i];
+            cout << i+1 << ". " << f << " | Quantity: x" << f.getQuantity() << endl;
         }
         cout << foodItems.size() + 1 << ". Back" << endl;
 
         int option;
-        cout << "Choose what you want to feed " << pou.name << "(1-" << foodItems.size() << ") " << endl;
+        cout << "Choose what you want to feed " << name << "(1-" << foodItems.size() << ") " << endl;
         option = getSafeIntOption();
 
         if (option < 1 || option > foodItems.size()) {
@@ -576,8 +571,8 @@ public:
             proceed();
             return;
         }
-        feed(foodItems[option-1], pou);
-        cout << pou.name << " ate " << foodItems[option-1].getName() << " 😋" << endl;
+        feed(foodItems[option-1]);
+        cout << name << " ate " << foodItems[option-1].getName() << " 😋" << endl;
         if (foodItems[option-1].getQuantity() == 0) foodItems.erase(foodItems.begin()+option-1);
         proceed();
     }
@@ -587,6 +582,8 @@ public:
         int back = false;
         while (!back) {
             cout << *this << endl;
+
+            if (statIsZero()) return;
 
             if (energy <= 0) {
                 cout << "⚠️ " << name << " is too tired to play. Feed him something and come back!" << endl;
@@ -603,32 +600,19 @@ public:
             option = getSafeIntOption();
 
             switch (option) {
-                case 1: {
-                    guessNum();
-                    checkLevelUp();
-                    break;
-                }
-                case 2: {
-                    solveEq();
-                    checkLevelUp();
-                    break;
-                }
-                case 3: {
-                    rps();
-                    checkLevelUp();
-                    break;
-                }
-                case 4: {
-                    back = true;
-                    break;
-                }
+                case 1:
+                    guessNum(); break;
+                case 2:
+                    solveEq(); break;
+                case 3:
+                    rps(); break;
+                case 4:
+                    back = true; break;
                 default:
                     cout<< "Invalid option. Try again." << endl;
                     break;
             }
-
         }
-
     }
 };
 
@@ -709,46 +693,95 @@ istream& operator>>(istream& is, Pou& obj) {
     return is;
 }
 
-void printInteractMenu(Pou& pou) {
+// ----------------------MENU----------------------
+
+class Menu {
+    vector<Pou*> pouList;
+    int currentPou;
+    Shop shop;
+    bool running;
+
+    void handleInteract();
+    void handleShop();
+    void handleInventory();
+
+public:
+    Menu();
+    ~Menu();
+    void run();
+    void createPou();
+    void switchPou();
+    void gameOver();
+};
+
+Menu::Menu() : currentPou(-1), running(true) {
+    cout << "First of all, let's configure your store!" << endl;
+    cin >> shop;
+    cout << "Success! ✅" << endl;
+}
+Menu::~Menu() {
+    for (int i = 0; i < pouList.size(); i++) {
+        delete pouList[i];
+    }
+}
+void Menu::handleInteract() {
+    Pou* pou = pouList[currentPou];
     int option;
     cout << "____________________________________" << endl
-        << "Choose what you want to do with " << pou.getName() << ":" << endl
+        << "Choose what you want to do with " << pou->getName() << ":" << endl
         << "____________________________________" << endl;
-    cout << "1. Feed " << pou.getName() << " 🍕" << endl;
-    cout << "2. Play with " << pou.getName() << " 🎮 " << endl;
-    cout << "3. Put " << pou.getName() << " to sleep 😴" << endl;
+    cout << "1. Feed " << pou->getName() << " 🍕" << endl;
+    cout << "2. Play with " << pou->getName() << " 🎮 " << endl;
+    cout << "3. Put " << pou->getName() << " to sleep 😴" << endl;
     cout << "4. Go to Menu" << endl;
     option = getSafeIntOption();
     switch (option) {
         case 1:
-            pou.feedMenu(pou);
-            break;
+            pou->feedMenu(); break;
         case 2:
-            pou.play();
-            break;
+            pou->play(); break;
         case 3:
-            pou.sleep(pou);
-            break;
+            pou->sleep(); break;
         case 4:
             break;
         default:
             cout << "Invalid choice!" << endl;
+            break;
     }
 }
+void Menu::handleInventory() {
+    Pou* pou = pouList[currentPou];
+    cout << "Select a category:" << endl;
+    cout << "1. Food" << endl;
+    cout << "2. Accessories" << endl;
 
-int createPou(vector<Pou>& pouList) {
-    char name[50];
-    cout << "Enter your Pou's name: ";
-    cin >> name;
+    int category;
+    cin >> category;
 
-    pouList.push_back(Pou(name));
-    cout << "Pou " << name << " successfully created! ✅" << endl;
-    cout << endl;
-
-    return pouList.size() - 1;
+    if (category == 1) {
+        if (pou->getFoodItems().empty()) {
+            cout << "You don't own any food!" << endl;
+            proceed();
+            return;
+        }
+        for (int i = 0; i < pou->getFoodItems().size(); i++) {
+            Food& f = pou->getFoodItems()[i];
+            cout << i+1 << ". " << f.getName() << " | Quantity: x" << f.getQuantity() << endl;
+        }
+        proceed();
+    } else {
+        if (pou->getAccessoryItems().empty()) {
+            cout << "You don't own any accessories!" << endl;
+            proceed();
+            return;
+        }
+        for (int i = 0; i < pou->getAccessoryItems().size(); i++)
+            cout << pou->getAccessoryItems()[i] << endl;
+        proceed();
+    }
 }
-
-void printShopMenu(Shop& shop, Pou& pou) {
+void Menu::handleShop() {
+    Pou* pou = pouList[currentPou];
     bool back = false;
     while (!back) {
         cout << shop.getName() << " 🛒" << endl;
@@ -775,13 +808,13 @@ void printShopMenu(Shop& shop, Pou& pou) {
             if (foodChoice == stock.size()+1) back = true;
             else if (foodChoice >= 1 && foodChoice <= stock.size()){
                 Food selected = shop.buyFood(foodChoice-1);
-                if (pou.getCoins() < selected.getPrice()) {
+                if (pou->getCoins() < selected.getPrice()) {
                     cout << "You don't have enough money! ❌" << endl;
                     proceed();
                     return;
                 }
-                pou.addFood(selected);
-                pou.pay(selected.getPrice());
+                pou->addFood(selected);
+                pou->pay(selected.getPrice());
                 cout << "Item successfully bought! 💸" << endl;
                 proceed();
                 return;
@@ -802,13 +835,13 @@ void printShopMenu(Shop& shop, Pou& pou) {
             if (accessoryChoice == stock.size()+1) back = true;
             else if (accessoryChoice >= 1 && accessoryChoice <= stock.size()){
                 Accessory selected = shop.buyAccessory(accessoryChoice-1);
-                if (pou.getCoins() < selected.getPrice()) {
+                if (pou->getCoins() < selected.getPrice()) {
                     cout << "You don't have enough money! ❌" << endl;
                     proceed();
                 }
                 else {
-                    pou.addAccessory(selected);
-                    pou.pay(selected.getPrice());
+                    pou->addAccessory(selected);
+                    pou->pay(selected.getPrice());
                     cout << "Item successfully bought! 💸" << endl;
                     proceed();
                 }
@@ -816,115 +849,80 @@ void printShopMenu(Shop& shop, Pou& pou) {
         }
         else back = true;
     }
-
 }
+void Menu::switchPou() {
+    int selectedPou;
+    cout << "Select Pou (1-" << pouList.size() << "): " << endl;
+    for (int i = 0; i < pouList.size(); i++) {
+        cout << i+1 << "." << pouList[i]->getName() << endl;
+    }
+    selectedPou = getSafeIntOption();
+    if (selectedPou >= 1 && selectedPou <= pouList.size()) {
+        currentPou = selectedPou - 1;
+    } else cout << "Invalid choice! Sticking to your current Pou." << endl;
+}
+void Menu::createPou() {
+    char name[50];
+    cout << "Enter your Pou's name: ";
+    cin >> name;
 
-void printMenu(vector<Pou>& pouList, int& currentPou, Shop& shop) {
-    Pou& pou = pouList[currentPou];
-    int option;
+    Pou* pou = new Pou(name);
+    pouList.push_back(pou);
+    currentPou = (int)pouList.size() - 1;
+    cout << "Pou " << name << " successfully created! ✅" << endl;
+    cout << endl;
+}
+void Menu::gameOver() {
+    if (pouList[currentPou]->statIsZero()) {
+        cout<< pouList[currentPou]->getName() << " died! 😱☠️" << endl;
+        cout << "╔═══╗─────────╔═══╗" << endl;
+        cout << "║╔═╗║─────────║╔═╗║" << endl;
+        cout << "║║─╚╬══╦╗╔╦══╗║║─║╠╗╔╦══╦═╗" << endl;
+        cout << "║║╔═╣╔╗║╚╝║║═╣║║─║║╚╝║║═╣╔╝" << endl;
+        cout << "║╚╩═║╔╗║║║║║═╣║╚═╝╠╗╔╣║═╣║" << endl;
+        cout << "╚═══╩╝╚╩╩╩╩══╝╚═══╝╚╝╚══╩╝" << endl;
+        delete pouList[currentPou];
+        running = false;
+        exit(0);
+    }
+}
+void Menu::run() {
+    while (running) {
+        if (pouList.empty()) {
+            cout << "Create a Pou! 💩 " << endl;
+            createPou();
+            continue;
+        }
 
-    cout << "================== MENU ==================" << endl;
-    cout << "1. Interact with " << pouList[currentPou].getName() << " 💩" << endl;
-    cout << "2. Switch Pou 🔄" << endl;
-    cout << "3. Create a new Pou 🐣" << endl;
-    cout << "4. Inventory 🎒" << endl;
-    cout << "5. Shop 🛍️" << endl;
-    cout << "6. Exit" << endl;
+        gameOver();
 
-    option = getSafeIntOption();
+        cout << *pouList[currentPou] << endl;
 
-    switch (option) {
-        case 1: {
-            printInteractMenu(pou);
-            break;
-        }
-        case 2: {
-            int selectedPou;
-            cout << "Select Pou (1-" << pouList.size() << "): " << endl;
-            for (int i = 0; i < pouList.size(); i++) {
-                cout << i+1 << "." << pouList[i].getName() << endl;
-            }
-            cin >> selectedPou;
-            if (selectedPou >= 1 && selectedPou <= pouList.size()) {
-                currentPou = selectedPou - 1;
-            } else cout << "Invalid choice! Sticking to your current Pou." << endl;
-            break;
-        }
-        case 3: {
-            currentPou = createPou(pouList);
-            break;
-        }
-        case 4: {
-            cout << "Select a category:" << endl;
-            cout << "1. Food" << endl;
-            cout << "2. Accessories" << endl;
+        cout << "================== MENU ==================" << endl;
+        cout << "1. Interact with " << pouList[currentPou]->getName() << " 💩" << endl;
+        cout << "2. Switch Pou 🔄" << endl;
+        cout << "3. Create a new Pou 🐣" << endl;
+        cout << "4. Inventory 🎒" << endl;
+        cout << "5. Shop 🛍️" << endl;
+        cout << "6. Exit" << endl;
 
-            int category;
-            cin >> category;
-
-            if (category == 1) {
-                if (pou.getFoodItems().empty()) {
-                    cout << "You don't own any food!" << endl;
-                    proceed();
-                    break;
-                }
-                for (int i = 0; i < pou.getFoodItems().size(); i++) {
-                    Food& f = pou.getFoodItems()[i];
-                    cout << f.getId() << ". " << f.getName() << " | Quantity: x" << f.getQuantity() << endl;
-                }
-                proceed();
-            } else {
-                if (pou.getAccessoryItems().empty()) {
-                    cout << "You don't own any accessories!" << endl;
-                    proceed();
-                    break;
-                }
-                for (int i = 0; i < pou.getAccessoryItems().size(); i++)
-                    cout << pou.getAccessoryItems()[i] << endl;
-            }
-            break;
+        int option = getSafeIntOption();
+        switch (option) {
+            case 1: handleInteract(); break;
+            case 2: switchPou(); break;
+            case 3: createPou(); break;
+            case 4: handleInventory(); break;
+            case 5: handleShop(); break;
+            case 6: running = false; break;
+            default: cout << "Invalid option!" << endl;
         }
-        case 5: {
-            printShopMenu(shop, pou);
-            break;
-        }
-        case 6: {
-            cout << "Bye bye! 👋";
-            exit(0);
-        }
-        default:
-            cout << "Invalid choice!" << endl;
-            break;
     }
 }
 
 int main() {
     srand(time(0));
-    vector<Pou> pouList;
-    int currentPou = 0;
-    Shop shop;
 
-    cout << "First of all, let's configure your store!" << endl;
-    cin >> shop;
-    cout << "Success! ✅" << endl;
-
-    while (true) {
-        if (pouList.empty()) {
-            cout << "Create a Pou! 💩 " << endl;
-            currentPou = createPou(pouList);
-        } else {
-            cout << pouList[currentPou] << endl;
-            printMenu(pouList, currentPou, shop);
-        }
-    }
+    Menu game;
+    game.run();
 }
 
-// ADAUGA CLASA MENIU, cu constructor default!
-// next commit message: finished pou interaction menu,
-
-// ----------------------MENU----------------------
-
-class Menu {
-    vector<Pou*> PouList;
-    Menu();
-};
