@@ -15,7 +15,7 @@ void proceed() {
 int getSafeIntOption() {
     int x;
     while (!(cin >> x)) {
-        cout << RED << "Use only numbers! (0-9)" << RESET << endl << "Your value: ";
+        cout << RED << "Use only numbers!" << RESET << endl << "Your value: ";
     cin.clear();
     cin.ignore(1000, '\n');
     }
@@ -167,7 +167,6 @@ Food::Food() : id(++noFoodItems) {
     price = 0.0;
 }
 Food::Food(int id, char* name, int hungerPoints, bool isHealthy, float healthPoints, int quantity, double price) : id(++noFoodItems) {
-    this->id = id;
     this->name = strcpy(new char[strlen(name) + 1], name);
     this->hungerPoints = hungerPoints;
     this->isHealthy = isHealthy;
@@ -176,7 +175,6 @@ Food::Food(int id, char* name, int hungerPoints, bool isHealthy, float healthPoi
     this->price = price;
 }
 Food::Food(const Food &obj) : id(++noFoodItems) {
-    this->id = obj.id;
     this->name = strcpy(new char[strlen(obj.name) + 1], obj.name);
     this->hungerPoints = obj.hungerPoints;
     this->isHealthy = obj.isHealthy;
