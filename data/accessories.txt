@@ -1,0 +1,6 @@
+name,color,price
+Hat,Red,10
+Glasses,Black,8
+Shirt,Blue,12
+Pants,Grey,11
+Shoes,White,9
