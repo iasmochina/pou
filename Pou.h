@@ -62,8 +62,8 @@ public:
     void feedMenu();
     void sleep();
 
-    void serialize(ostream& out) const;
-    void deserialize(istream& in);
+    void serialize(ostream& os) const;
+    void deserialize(istream& is);
 };
 
 #endif

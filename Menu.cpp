@@ -267,7 +267,7 @@ void Menu::run() {
             cout << "6. Statistics 📊" << endl;
             cout << "7. Save & Exit" << endl;
 
-            int option = getIntInRange(1,6);
+            int option = getIntInRange(1,7);
             switch (option) {
                 case 1: handlePlay(); break;
                 case 2: handleFeed(); break;

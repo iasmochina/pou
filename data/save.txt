@@ -1,0 +1,23 @@
+p
+20
+100
+20
+60
+25
+20
+1
+0
+0
+RPS
+10
+2
+1
+Guess the Number
+10
+5
+0
+Solve Equation
+15
+
+1
+1
